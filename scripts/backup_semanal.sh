@@ -71,9 +71,18 @@ echo "✅ Rede e conexão com o banco estabelecidas!"
 if [ $? -eq 0 ]; then
   echo "✅ Sucesso! Arquivo criado: $BACKUP_DIR/$FILENAME"
 
+  # Notificação macOS
+  osascript -e "display notification \"Backup do Supabase concluído com sucesso!\" with title \"💾 Backup OK\""
+
   # Limpa backups com mais de 15 dias (já que agora roda diário)
   find "$BACKUP_DIR" -name "backup_supabase_full_*.sql" -type f -mtime +15 -delete
   echo "🧹 Limpeza de backups antigos concluída."
 else
   echo "❌ Erro ao realizar o backup no pg_dump."
+
+  # Notificação macOS de Erro
+  osascript -e "display notification \"Ocorreu um erro ao realizar o backup do Supabase. Verifique o log!\" with title \"⚠️ Falha no Backup\""
+
+  rm -f "$BACKUP_DIR/$FILENAME"
+  echo "🗑️ Arquivo parcial removido para permitir nova tentativa pelo cron."
 fi
