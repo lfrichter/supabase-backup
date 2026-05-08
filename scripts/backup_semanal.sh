@@ -1,15 +1,21 @@
 #!/bin/bash
 
-# --- CONFIGURAÇÕES ---
-export PGPASSWORD='!ha3-2gf7_cRDUg'
+# --- CARREGAR CONFIGURAÇÕES ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# DADOS DO POOLER (IPv4 Estável)
-DB_HOST="aws-1-sa-east-1.pooler.supabase.com"
-DB_USER="postgres.ugbcqdrslppxgfqollvu"
-DB_PORT="6543"
-DB_NAME="postgres"
+if [ -f "$PARENT_DIR/.env" ]; then
+  source "$PARENT_DIR/.env"
+  export PGPASSWORD
+else
+  echo "❌ Erro: Arquivo .env não encontrado em $PARENT_DIR"
+  exit 1
+fi
 
-BACKUP_DIR="$HOME/supabase-backups/files"
+# DADOS DO POOLER (Variáveis vindas do .env)
+# DB_HOST, DB_USER, DB_PORT, DB_NAME definidos no .env
+
+BACKUP_DIR="$PARENT_DIR/files"
 DATE=$(date +%Y-%m-%d_%H-%M-%S)
 TODAY=$(date +%Y-%m-%d)
 FILENAME="backup_supabase_full_$DATE.sql"

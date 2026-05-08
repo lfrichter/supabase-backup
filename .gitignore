@@ -1,6 +1,9 @@
 # Backups (arquivos grandes e sensíveis)
 files/*.sql
 
+# Credenciais
+.env
+
 # Logs
 *.log
 
