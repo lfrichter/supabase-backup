@@ -1,0 +1,12 @@
+# Backups (arquivos grandes e sensíveis)
+files/*.sql
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+
+# Temporários
+new_cron.txt
+temp_cron
