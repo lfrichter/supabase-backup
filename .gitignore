@@ -1,8 +1,12 @@
 # Backups (arquivos grandes e sensíveis)
 files/*.sql
+files/**/*.sql
 
-# Credenciais
+# Credenciais e ambientes
 .env
+projects/*.env
+!projects/.env.example
+!projects/*.example
 
 # Logs
 *.log
