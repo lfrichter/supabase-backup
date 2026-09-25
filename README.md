@@ -97,7 +97,7 @@ crontab -l
 O agendamento executa de hora em hora na janela definida (ex: das 08h às 23h). Cada projeto é verificado individualmente: se o backup do dia já tiver sido feito, ele é ignorado instantaneamente.
 
 ```cron
-0 8-23 * * * /bin/bash $HOME/supabase-backups/scripts/backup_all.sh >> $HOME/supabase-backups/backup.log 2>&1
+0 8-23 * * * /bin/bash $HOME/projects/side/supabase-backups/scripts/backup_all.sh >> $HOME/projects/side/supabase-backups/backup.log 2>&1
 ```
 
 ---
