@@ -1,22 +1,3 @@
----
-project: Supabase-Backups
-type: side-project
-status: completed
-date: 2026-09-25
-tags:
-  - project/side
-  - supabase
-  - backup
-  - postgresql
-  - bash
-  - cron
-  - automacao
-repository: https://github.com/lfrichter/supabase-backup
-local_path: ~/projects/side/supabase-backups
-related:
-  - "[[Scripts e Automações do Vault Obsidian.md]]"
----
-
 # 🗄️ Supabase Backup Automático Multi-Projetos (Smart Retry)
 
 [![Repository](https://img.shields.io/badge/GitHub-lfrichter%2Fsupabase--backup-blue.svg?logo=github)](https://github.com/lfrichter/supabase-backup)
@@ -102,14 +83,15 @@ O agendamento executa de hora em hora na janela definida (das 08h às 23h). Cada
 0 8-23 * * * /bin/bash $HOME/projects/side/supabase-backups/scripts/backup_all.sh >> $HOME/projects/side/supabase-backups/backup.log 2>&1
 ```
 
-> **Por que essa janela?**  
+> **Por que essa janela?**
 > Caso o notebook ou computador esteja desligado às 08:00, o backup será executado automaticamente na primeira hora em que o computador for ligado (09:00, 10:00, etc.). Assim que obtiver sucesso no dia, as tentativas subsequentes apenas verificam a duplicidade e encerram em frações de segundo.
 
 ---
 
 ## 🛠️ Guia de Comandos e Operações
 
-### Executar backup de todos os projetos
+### Executar Backup de Todos Os Projetos
+
 ```bash
 # A partir da raiz do projeto:
 ./scripts/backup_all.sh
@@ -118,7 +100,8 @@ O agendamento executa de hora em hora na janela definida (das 08h às 23h). Cada
 ~/projects/side/supabase-backups/scripts/backup_all.sh
 ```
 
-### Executar backup de apenas um projeto específico
+### Executar Backup de Apenas Um Projeto Específico
+
 ```bash
 # Pelo nome do projeto:
 ./scripts/backup_project.sh canaoaves
@@ -127,14 +110,16 @@ O agendamento executa de hora em hora na janela definida (das 08h às 23h). Cada
 ./scripts/backup_project.sh projects/forroja.env
 ```
 
-### Monitorar logs em tempo real
+### Monitorar Logs em Tempo Real
+
 ```bash
 tail -f backup.log
 # ou
 tail -f ~/projects/side/supabase-backups/backup.log
 ```
 
-### Verificar o agendamento atual no Cron
+### Verificar O Agendamento Atual no Cron
+
 ```bash
 crontab -l
 ```
@@ -146,11 +131,13 @@ crontab -l
 Para integrar um novo banco de dados Supabase na rotina:
 
 1. Crie um arquivo em `projects/<nome_do_projeto>.env` (você pode duplicar o `projects/.env.example`):
+
    ```bash
    cp projects/.env.example projects/novo_projeto.env
    ```
 
 2. Edite o arquivo com as credenciais do banco Supabase do projeto:
+
    ```env
    PROJECT_NAME="novo_projeto"
    PROJECT_LABEL="Novo Projeto"
