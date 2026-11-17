@@ -1,161 +1,155 @@
-# 🗄️ Supabase Backup Automático Multi-Projetos (Smart Retry)
+# 🗄️ Multi-Project Automated Supabase Backup (Smart Retry)
 
 [![Repository](https://img.shields.io/badge/GitHub-lfrichter%2Fsupabase--backup-blue.svg?logo=github)](https://github.com/lfrichter/supabase-backup)
 [![Type](https://img.shields.io/badge/Type-Side%20Project-orange.svg)](#)
 [![Status](https://img.shields.io/badge/Status-Active%20%2F%20Production-green.svg)](#)
 [![Stack](https://img.shields.io/badge/Stack-Bash%20%7C%20Netcat%20%7C%20pg__dump%20%7C%20Cron-lightgrey.svg)](#)
 
-Sistema modular e resiliente para realização de backups automatizados e retenção programada de múltiplos bancos de dados **Supabase (PostgreSQL)** com lógica de tentativa automática (Smart Retry), controle de duplicidade diária, blindagem de conectividade de rede e notificações no macOS.
+A modular, resilient backup and retention automation system for multiple **Supabase (PostgreSQL)** databases featuring automatic retry logic (Smart Retry), daily duplication prevention, network connectivity shielding, and native macOS notifications.
 
 ---
 
-## 🧭 Metadados e Informações Gerais
+## 🧭 Metadata & Overview
 
-- **Repositório GitHub:** [lfrichter/supabase-backup](https://github.com/lfrichter/supabase-backup)
-- **Local no Disco:** `~/projects/side/supabase-backups` (`/Users/master/projects/side/supabase-backups`)
-- **Projetos Ativos:**
-  - `canaoaves`: Banco do projeto **Canaoaves** (`ugbcqdrslppxgfqollvu`)
-  - `forroja`: Banco do projeto **ForroJá**
-  - Suporte expansível para novos bancos via arquivos de configuração `.env` independentes.
+- **GitHub Repository:** [lfrichter/supabase-backup](https://github.com/lfrichter/supabase-backup)
+- **Local Path:** `~/projects/side/supabase-backups` (`/Users/master/projects/side/supabase-backups`)
+- **Active Projects:**
+  - `canaoaves`: **Canaoaves** database (`ugbcqdrslppxgfqollvu`)
+  - `forroja`: **ForroJá** database
+  - Seamlessly expandable to new databases via independent `.env` configuration files.
 
 ---
 
-## 🚀 Arquitetura e Funcionamento
+## 🚀 Architecture & Workflow
 
-O sistema foi desenhado para ser resiliente a falhas de rede, oscilações de conexão e desligamento da máquina local.
+The system is designed to be fully resilient against network drops, unstable connections, and machine downtime.
 
 ```mermaid
 flowchart TD
-    A["Crontab macOS (0 8-23 * * *)"] --> B["scripts/backup_all.sh"]
-    B --> C["Varre pasta projects/*.env"]
-    C --> D{"Existe backup hoje em files/projeto/?"}
-    D -- Sim --> E["Pula projeto (Economiza rede/disco)"]
-    D -- Não --> F["Valida rede com nc (Netcat)"]
-    F -- Falha --> G["Grava log de erro e aguarda próximo ciclo"]
-    F -- Sucesso --> H["Executa pg_dump"]
-    H -- Sucesso --> I["Limpa dumps > RETENTION_DAYS e Notifica macOS"]
-    H -- Falha --> J["Remove arquivo .sql corrompido/parcial"]
+    A["macOS Crontab (0 8-23 * * *)"] --> B["scripts/backup_all.sh"]
+    B --> C["Scan projects/*.env"]
+    C --> D{"Backup exists today in files/<project>/?"}
+    D -- Yes --> E["Skip project (Saves bandwidth & disk)"]
+    D -- No --> F["Verify network with nc (Netcat)"]
+    F -- Failure --> G["Log error & wait for next schedule cycle"]
+    F -- Success --> H["Execute pg_dump"]
+    H -- Success --> I["Prune dumps > RETENTION_DAYS & Notify macOS"]
+    H -- Failure --> J["Delete corrupted/partial .sql file"]
 ```
 
-### 🧠 Camada de Inteligência (Smart Retry)
+### 🧠 Intelligent Layer (Smart Retry)
 
-1. **Multi-Projetos Isolados:** Cada projeto possui seu próprio arquivo `.env` em `projects/<projeto>.env` e os dumps gerados são salvos isoladamente em `files/<projeto>/`.
-2. **Verificação de Duplicidade Diária:** Antes de iniciar o download de um banco, o script checa na pasta do projeto (`files/<projeto>/`) se já existe um backup concluído para o dia atual. Se sim, ele ignora aquele projeto e passa para o próximo.
-3. **Blindagem de Conectividade:** Testa a conexão TCP na porta do Supabase (`nc -z -w5 $DB_HOST $DB_PORT`) antes de invocar o utilitário `pg_dump`.
-4. **Auto-Limpeza de Falhas:** Caso o backup de um banco seja interrompido ou falhe, o arquivo parcial corrompido é removido automaticamente para permitir que a próxima tentativa do Cron execute sem deixar lixo.
-5. **Política de Retenção:** Remove automaticamente backups antigos com base na variável `RETENTION_DAYS` configurada em cada `.env` (padrão: 15 dias).
-6. **Notificações macOS:** Notifica o usuário na Central de Notificações do macOS com o status e tamanho do backup gerado.
+1. **Isolated Multi-Projects:** Each project has its own dedicated configuration file in `projects/<project>.env`, and generated SQL dumps are stored separately in `files/<project>/`.
+2. **Daily Duplication Prevention:** Before downloading a dump, the script checks `files/<project>/` to see if a completed backup already exists for today. If found, it skips that database immediately.
+3. **Network Connectivity Shielding:** Tests the TCP connection to the Supabase host and port (`nc -z -w5 $DB_HOST $DB_PORT`) before invoking `pg_dump`.
+4. **Automatic Failure Cleanup:** If a backup operation is interrupted or fails midway, the corrupted partial `.sql` file is deleted automatically, allowing the next cron cycle to start cleanly.
+5. **Configurable Retention Policy:** Automatically purges outdated backups based on the `RETENTION_DAYS` variable configured in each `.env` (default: 15 days).
+6. **Native macOS Notifications:** Sends notification banners to the macOS Notification Center detailing the backup status and final file size.
 
 ---
 
-## 📂 Estrutura do Diretório
+## 📂 Directory Structure
 
 ```text
 supabase-backups/
-├── projects/                        # Configurações isoladas de cada projeto
-│   ├── .env.example                 # Modelo base com as variáveis
-│   ├── canaoaves.env                # Configurações do projeto Canaoaves
-│   ├── forroja.env                  # Configurações do projeto ForroJá
-│   ├── forroja.env.example          # Modelo para o projeto ForroJá
-│   └── ...                          # Novos projetos (.env)
+├── projects/                        # Isolated project configuration files
+│   ├── .env.example                 # Baseline environment template
+│   ├── canaoaves.env                # Canaoaves project configuration
+│   ├── forroja.env                  # ForroJá project configuration
+│   ├── forroja.env.example          # Sample configuration template
+│   └── ...                          # Additional project configs (.env)
 │
 ├── scripts/
-│   ├── backup_project.sh            # Script que executa o backup de 1 projeto específico
-│   ├── backup_all.sh                # Script mestre que executa o backup de todos os projetos
-│   └── backup_semanal.sh            # Wrapper de compatibilidade com agendamentos anteriores
+│   ├── backup_project.sh            # Script that executes backup for 1 target project
+│   ├── backup_all.sh                # Master runner that loops through all projects
+│   └── backup_semanal.sh            # Compatibility wrapper for legacy cron entries
 │
-├── files/                           # Destino dos backups organizados por projeto
-│   ├── canaoaves/                   # Backups do Canaoaves (ex: backup_canaoaves_2026-09-25_08-00-00.sql)
-│   ├── forroja/                     # Backups do ForroJá
+├── files/                           # Target directory for dumps organized by project
+│   ├── canaoaves/                   # Canaoaves dumps (e.g. backup_canaoaves_2026-09-25_08-00-00.sql)
+│   ├── forroja/                     # ForroJá dumps
 │   └── ...
 │
-├── backup.log                       # Logs de execução consolidados
-└── README.md                        # Documentação técnica do projeto
+├── backup.log                       # Consolidated execution logs
+└── README.md                        # Project technical documentation
 ```
 
 ---
 
-## ⏰ Agendamento no macOS (Cron)
+## ⏰ Scheduling on macOS (Cron)
 
-O agendamento executa de hora em hora na janela definida (das 08h às 23h). Cada projeto é verificado individualmente: se o backup do dia já tiver sido feito, ele é ignorado instantaneamente.
+The scheduled backup runs hourly during an extended operational window (from 08:00 to 23:00). Each project is checked individually: if today's backup is already completed, the check concludes in milliseconds.
 
 ```cron
 0 8-23 * * * /bin/bash $HOME/projects/side/supabase-backups/scripts/backup_all.sh >> $HOME/projects/side/supabase-backups/backup.log 2>&1
 ```
 
-> **Por que essa janela?**
-> Caso o notebook ou computador esteja desligado às 08:00, o backup será executado automaticamente na primeira hora em que o computador for ligado (09:00, 10:00, etc.). Assim que obtiver sucesso no dia, as tentativas subsequentes apenas verificam a duplicidade e encerram em frações de segundo.
+> **Why this schedule window?**  
+> If the computer is powered off or asleep at 08:00, the backup executes automatically during the first hour the machine wakes up (09:00, 10:00, etc.). Once successful for the day, subsequent runs instantly detect the existing backup and exit without consuming resources.
 
 ---
 
-## 🛠️ Guia de Comandos e Operações
+## 🛠️ Commands & Operations Guide
 
-### Executar Backup de Todos Os Projetos
-
+### Run backup for all projects
 ```bash
-# A partir da raiz do projeto:
+# From the project root:
 ./scripts/backup_all.sh
 
-# Ou via caminho absoluto:
+# Or using the absolute path:
 ~/projects/side/supabase-backups/scripts/backup_all.sh
 ```
 
-### Executar Backup de Apenas Um Projeto Específico
-
+### Run backup for a specific project
 ```bash
-# Pelo nome do projeto:
+# By project name:
 ./scripts/backup_project.sh canaoaves
 
-# Ou pelo caminho do arquivo .env:
+# Or by config file path:
 ./scripts/backup_project.sh projects/forroja.env
 ```
 
-### Monitorar Logs em Tempo Real
-
+### Tail execution logs in real time
 ```bash
 tail -f backup.log
-# ou
+# or
 tail -f ~/projects/side/supabase-backups/backup.log
 ```
 
-### Verificar O Agendamento Atual no Cron
-
+### Inspect current crontab schedule
 ```bash
 crontab -l
 ```
 
 ---
 
-## ➕ Adicionando Um Novo Banco / Projeto
+## ➕ Adding a New Database / Project
 
-Para integrar um novo banco de dados Supabase na rotina:
+To integrate a new Supabase database into the automated routine:
 
-1. Crie um arquivo em `projects/<nome_do_projeto>.env` (você pode duplicar o `projects/.env.example`):
-
+1. Duplicate the baseline template:
    ```bash
-   cp projects/.env.example projects/novo_projeto.env
+   cp projects/.env.example projects/new_project.env
    ```
 
-2. Edite o arquivo com as credenciais do banco Supabase do projeto:
-
+2. Edit the file with the target Supabase credentials:
    ```env
-   PROJECT_NAME="novo_projeto"
-   PROJECT_LABEL="Novo Projeto"
+   PROJECT_NAME="new_project"
+   PROJECT_LABEL="New Project"
 
    DB_HOST="aws-0-sa-east-1.pooler.supabase.com"
    DB_PORT="6543"
    DB_NAME="postgres"
-   DB_USER="postgres.seu_project_ref"
-   PGPASSWORD="sua-senha-aqui"
+   DB_USER="postgres.your_project_ref"
+   PGPASSWORD="your-strong-password"
 
    RETENTION_DAYS=15
    ```
 
-3. Pronto! O script mestre (`backup_all.sh`) e o Cron detectarão automaticamente o novo projeto na próxima execução.
+3. Done! The master script (`backup_all.sh`) and cron will automatically detect and execute the new project on the next cycle.
 
 ---
 
-## ⚠️ Segurança
+## ⚠️ Security
 
-- Todos os arquivos `.env` dentro de `projects/` e na raiz estão no `.gitignore` para não expor credenciais.
-- Todos os arquivos de dump `.sql` dentro de `files/` estão no `.gitignore`.
+- All `.env` files inside `projects/` and at the root are tracked in `.gitignore` to prevent credential leaks.
+- All database dump `.sql` files inside `files/` are ignored in `.gitignore`.
